@@ -1,4 +1,4 @@
-# vue2-website-starter
+# flippy-cards
 
 ## Project setup
 ```
