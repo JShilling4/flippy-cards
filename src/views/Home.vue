@@ -33,10 +33,10 @@
 						:key="card.tempId"
 						class="card"
 					>
-						<img
-							:src="`https://farm${card.farm}.staticflickr.com/${card.server}/${card.id}_${card.secret}.jpg`"
-							@click="selectCard(card)"
-						>
+						<FlipCard
+							:card="card"
+							@click.native="flipCard(card)"
+						/>
 					</div>
 				</div>
 			</div>
@@ -49,7 +49,9 @@ let idIncrementer = 1;
 
 export default {
 	name: "Home",
-	components: {},
+	components: {
+		FlipCard: () => import("@/components/FlipCard.vue"),
+	},
 	data() {
 		return {
 			//data
@@ -72,6 +74,24 @@ export default {
 		},
 	},
 	methods: {
+		clearSelected() {
+			setTimeout(() => {
+				const firstRef = this.cards.find(
+					(card) => card.tempId == this.firstSelected.tempId
+				);
+				const secondRef = this.cards.find(
+					(card) => card.tempId == this.secondSelected.tempId
+				);
+				if (!firstRef.matched) {
+					firstRef.flipped = false;
+				}
+				if (!secondRef.matched) {
+					secondRef.flipped = false;
+				}
+				this.firstSelected = null;
+				this.secondSElected = null;
+			}, 1000);
+		},
 		startGame() {
 			this.cards = [];
 			for (let i = 0; i < this.cardCount / 2; i++) {
@@ -79,10 +99,14 @@ export default {
 					this.cards.push({
 						...this.photos[i],
 						tempId: (idIncrementer += 1),
+						matched: false,
+						flipped: false,
 					});
 					this.cards.push({
 						...this.photos[i],
 						tempId: (idIncrementer += 1),
+						matched: false,
+						flipped: false,
 					});
 				}
 			}
@@ -96,21 +120,32 @@ export default {
 			}
 			return array;
 		},
-		selectCard(selected) {
+		flipCard(selected) {
 			if (this.firstSelected === null) {
 				this.firstSelected = selected;
+				this.cards.find(
+					(card) => card.tempId == this.firstSelected.tempId
+				).flipped = true;
 				console.log("first selection");
 			} else {
 				this.secondSelected = selected;
+				this.cards.find(
+					(card) => card.tempId == this.secondSelected.tempId
+				).flipped = true;
 				this.checkForMatch();
 			}
 		},
 		checkForMatch() {
 			if (this.firstSelected.id === this.secondSelected.id) {
+				this.cards.forEach((card) => {
+					if (card.id === this.firstSelected.id) {
+						card.matched = true;
+					}
+				});
+				this.clearSelected();
 				console.log("matched!");
 			} else {
-				this.firstSelected = null;
-				this.secondSElected = null;
+				this.clearSelected();
 				console.log("no match and clear");
 			}
 		},
@@ -139,16 +174,5 @@ export default {
 
 	grid-column-gap: 4rem;
 	grid-row-gap: 4rem;
-	.card {
-		background-color: black;
-		height: 15rem;
-		// width: 15rem;
-		cursor: pointer;
-		img {
-			object-fit: cover;
-			height: 100%;
-			width: 100%;
-		}
-	}
 }
 </style>
